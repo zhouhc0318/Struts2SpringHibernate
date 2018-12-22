@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"    
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"   
+        xmlns:p="http://www.springframework.org/schema/p"  
+        xmlns:aop="http://www.springframework.org/schema/aop"   
+        xmlns:context="http://www.springframework.org/schema/context"  
+        xmlns:jee="http://www.springframework.org/schema/jee"  
+        xmlns:tx="http://www.springframework.org/schema/tx"  
+        xsi:schemaLocation="    
+            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd  
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd  
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+            http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.2.xsd  
+            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+            
+     <!-- <context:component-scan base-package="com.zh"></context:component-scan> -->     
+    <!--1.配置连接池-bean -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql://192.168.50.235:33306/zhouhc" />
+        <property name="username" value="root" />
+        <property name="password" value="123456" />
+    </bean>
+    <!--2. 获取sessionFactory 通过spring获取hibernate提供的sessionFactory -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <!-- 把c3p0注入到sessionFactory中 -->
+        <property name="dataSource" ref="dataSource"></property>
+        <!--hibernate 的基本配置 -->
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                <!-- <prop key="hibernate.dialect">org.hibernate.dialect.OracleDialect</prop> -->
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.format_sql">true</prop>
+                <prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
+
+            </props>
+        </property>
+        <property name="packagesToScan">
+            <list>
+                <!-- <value>com/zh/pojo/BookCard.hbm.xml</value> -->
+                <value>com.zh.pojo</value>
+            </list>
+        </property>
+    </bean>
+    <!-- 3.template配置  将sessionFactory注入到template -->
+    <!-- <bean id="template" class="org.springframework.orm.hibernate4.HibernateTemplate">
+    	<property name="sessionFactory" ref="sessionFactory"></property>
+    </bean> -->   
+    <!-- (1)配置注解事务管理器 -->
+    <bean id="txManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+     <!-- (2)加入注解事务管理器 -->
+    <tx:annotation-driven transaction-manager="txManager"/>      
+    
+    
+    <!-- 4.注解配置组件（代表声明开启注解模式，不加的话三个框架整合的话或许有些问题，或许识别不了标注组件@）-->
+    <context:annotation-config />
+    <!-- 5.配置注解的自动扫描范围（多个包配置可配置多个context:component-scan）base-package:需要扫描的包  -->
+    <context:component-scan base-package="com.zh.dao.impl"/>
+    <context:component-scan base-package="com.zh.service.impl"/>
+    <context:component-scan base-package="com.zh.action"/>  
+          
+            
+    <!-- 类似于财务部门一样，类就是钱，所有需要类的实例都由srping去管理 -->
+    <!-- <bean id="myIndexAction" class="com.zh.action.IndexAction" scope="prototype"> -->
+        <!-- setIs(myIndexService) -->
+        <!-- <property name="is" ref="myIndexService"/> -->
+    <!-- </bean> -->
+    
+    <!-- myIndexService = new ssh.service.IndexServiceImpl() -->
+    <!-- <bean id="myIndexService" class="com.zh.service.impl.IndexServiceImpl" scope="prototype"> -->
+        <!-- <property name="id" ref="myIndexDao"/> -->
+    <!-- </bean> -->
+    
+    <!-- <bean id="myIndexDao" class="com.zh.dao.impl.IndexDaoImpl" scope="prototype"> -->
+        <!-- 把sessionFactory 注入给IndexDao -->
+        <!-- <property name="sessionFactory" ref="sessionFactory" /> -->
+    <!-- </bean> -->
+    
+     <!-- 添加sessionFactory bane ，注意，该类是Spring提供的 -->
+    <!-- <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean" scope="prototype"> -->
+        <!-- 注入Hibernate 配置文件路径,前面要加上  classpath:-->
+        <!-- <property name="configLocation" value="classpath:hibernate.cfg.xml"/> -->
+    <!-- </bean> -->
+
+</beans>
